@@ -40,17 +40,7 @@ using namespace std;
 #define l1i_prefetcher_initialize l1i_prefetcher_initialize1
 #define prefetch_code_line prefetch_code_line1
 
-//#include "no.l1i_pref"
-//#include "next_line.l1i_pref"
-//#include "Barca.l1i_pref"
-//#include "D_JOLT.l1i_pref"
-//#include "EIP.l1i_pref"
-//#include "FNL-MMA.l1i_pref"
-//#include "EIP_04.l1i_pref"
-//#include "Barca.l1i_pref"
-//#include "D_JOLT_C.l1i_pref"
-//#include "Barca_B.cc"
-#include "FNL-MMA_B.inc"
+#include XXX 
 
 #undef l1i_prefetcher_branch_operate
 #undef l1i_prefetcher_cache_fill
@@ -70,17 +60,7 @@ using namespace std;
 #define l1i_prefetcher_initialize l1i_prefetcher_initialize2
 #define prefetch_code_line prefetch_code_line2
 
-//#include "no.l1i_pref"
-//#include "next_line.l1i_pref"
-//#include "Barca.l1i_pref"
-//#include "D_JOLT.l1i_pref"
-//#include "EIP.l1i_pref"
-//#include "FNL-MMA.l1i_pref"
-//#include "EIP_04.cc"
-//#include "Barca_A.l1i_pref"
-//#include "D_JOLT_C.cc"
-//#include "FNL-MMA_B.l1i_pref"
-#include "PIPS_D.inc"
+#include YYY 
 
 #undef l1i_prefetcher_branch_operate
 #undef l1i_prefetcher_cache_fill
@@ -100,18 +80,7 @@ using namespace std;
 #define l1i_prefetcher_initialize l1i_prefetcher_initialize3
 #define prefetch_code_line prefetch_code_line3
 
-//#include "no.l1i_pref"
-//#include "next_line.l1i_pref"
-//#include "Barca.l1i_pref"
-//#include "D_JOLT.l1i_pref"
-//#include "EIP.l1i_pref"
-//#include "FNL-MMA.l1i_pref"
-//#include "EIP_04.l1i_pref"
-//#include "Barca_A.inc"
-//#include "D_JOLT_C.l1i_pref"
-//#include "FNL-MMA_B.cc"
-//#include "FNL-MMA_C.cc"
-#include "ISCA_Entangling_2Ke_NoShadows.inc"
+#include ZZZ 
 
 #undef l1i_prefetcher_branch_operate
 #undef l1i_prefetcher_cache_fill
@@ -146,9 +115,9 @@ SHADOW_CACHE base_sc;
 
 #ifdef MEASURE
 
-SHADOW_CACHE fnl_sc;
-SHADOW_CACHE djolt_sc;
-SHADOW_CACHE barca_sc;
+SHADOW_CACHE first_sc;
+SHADOW_CACHE second_sc;
+SHADOW_CACHE third_sc;
 
 //number of possible hit scenarios between
 //the 4 shadow caches
@@ -370,7 +339,7 @@ void O3_CPU::l1i_prefetcher_cache_operate(uint64_t v_addr, uint8_t cache_hit, ui
   pfb.update_pf_hits(v_addr, sc_hit, pf_hit);
 
   if(!cache_hit)
-    pfb.update_harmful(v_addr, fnl_sc, djolt_sc, barca_sc, base_sc);
+    pfb.update_harmful(v_addr, first_sc, second_sc, third_sc, base_sc);
   pfb.update_accuracy(v_addr, pf_hit);
   pfb.inc_epoch(); 
   #endif
@@ -378,23 +347,23 @@ void O3_CPU::l1i_prefetcher_cache_operate(uint64_t v_addr, uint8_t cache_hit, ui
 
 #ifdef MEASURE
 
-  bool fnl_hit = false;
-  bool djolt_hit = false;
-  bool barca_hit = false;
+  bool first_hit = false;
+  bool second_hit = false;
+  bool third_hit = false;
   bool base_hit = false;
 
-  //FNL
-  fnl_sc.access_cache(v_addr, &fnl_hit, NULL, 0, NULL, NULL, ACCESS_DEMAND);
+  //First prefetcher
+  first_sc.access_cache(v_addr, &first_hit, NULL, 0, NULL, NULL, ACCESS_DEMAND);
 
-  //DJOLT
-  djolt_sc.access_cache(v_addr, &djolt_hit, NULL, 0, NULL, NULL, ACCESS_DEMAND);
+  //Second prefetcher
+  second_sc.access_cache(v_addr, &second_hit, NULL, 0, NULL, NULL, ACCESS_DEMAND);
 
-  //BARCA 
-  barca_sc.access_cache(v_addr, &barca_hit, NULL, 0, NULL, NULL, ACCESS_DEMAND);
+  //Third prefetcher
+  third_sc.access_cache(v_addr, &third_hit, NULL, 0, NULL, NULL, ACCESS_DEMAND);
 
   base_sc.access_cache(v_addr, &base_hit, NULL, 0, NULL, NULL, ACCESS_DEMAND);
 
-  bool hit_vector[NUM_MEASURE] = {fnl_hit, djolt_hit, barca_hit, base_hit};
+  bool hit_vector[NUM_MEASURE] = {first_hit, second_hit, third_hit, base_hit};
   int bit_hit = 0;
 
   for(int a = 0; a < NUM_MEASURE; a++){
@@ -470,15 +439,15 @@ void O3_CPU::l1i_prefetcher_cycle_operate()
       switch(i){
         //FNL
         case 0:
-          fnl_sc.access_cache(p_vaddr, NULL, NULL, 0, NULL, NULL, ACCESS_PREFETCH);
+          first_sc.access_cache(p_vaddr, NULL, NULL, 0, NULL, NULL, ACCESS_PREFETCH);
           break;
         //DJOLT
         case 1:
-          djolt_sc.access_cache(p_vaddr, NULL, NULL, 0, NULL, NULL, ACCESS_PREFETCH);
+          second_sc.access_cache(p_vaddr, NULL, NULL, 0, NULL, NULL, ACCESS_PREFETCH);
           break;
         //BARCA 
         case 2:
-          barca_sc.access_cache(p_vaddr, NULL, NULL, 0, NULL, NULL, ACCESS_PREFETCH);
+          third_sc.access_cache(p_vaddr, NULL, NULL, 0, NULL, NULL, ACCESS_PREFETCH);
           break;
       }
       #endif

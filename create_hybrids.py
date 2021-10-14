@@ -43,7 +43,8 @@ for h in hybrid_prefetchers:
   # Debug
   print('Hybrid Base Name: ' + hybrid_base)
   
-  # Find the integer number in the file name
+  # Find the integer number in the hybrid base's name
+  # tells us how many prefetchers we need to fetch
   combination_amt = int(re.findall(r'\d+', hybrid_base)[0])
   
   # Debug
@@ -74,7 +75,10 @@ for h in hybrid_prefetchers:
 
     # Copy over the individual combination prefetchers
     for p in comb_prefs:
-      shutil.copy2(home + prefs_dir + p + '.cc', home + '/' + comb_dir_name)
+      shutil.copy2(home + prefs_dir + p + '.inc', home + '/' + comb_dir_name)
+    
+    # Copy over ppf.cc, which all need
+    shutil.copy2(home + prefs_dir + 'ppf.cc', home + '/' + comb_dir_name)
 
     # And finally move over prefetch_buffer.cc, which all need
     shutil.copy2(home + prefs_dir + 'prefetch_buffer.cc', home + '/' + comb_dir_name)
@@ -85,8 +89,9 @@ for h in hybrid_prefetchers:
     # Debug
     print('Now in directory: '+os.getcwd())
 
-    # Strings we will be substituting in hybrid files
+    # Strings we will be substituting in the hybrid file(s)
     # based on combination_amt
+    # e.g. XXX -> Barca_A, YYY -> JIP_10E, ZZZ -> mana_10F
     str_subs = ['XXX','YYY','ZZZ','AAA']
 
     # Open up hybrid prefetcher file and substitute line by line
@@ -94,7 +99,7 @@ for h in hybrid_prefetchers:
       fin = open(h, 'r') 
       fout = open(h+'_new', 'w')
       for line in fin:
-        fout.write(line.replace(str_subs[s],'"' + comb_prefs[s] + '.cc"'))
+        fout.write(line.replace(str_subs[s],'"' + comb_prefs[s] + '.inc"'))
       fin.close()
       fout.close()
       shutil.move(h+'_new', h)
