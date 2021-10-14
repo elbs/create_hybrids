@@ -5,8 +5,9 @@ import itertools as it
 import re
 
 # These two lists are the only things you must add to, or modify
-prefetchers = ['Barca_A', 'D-JOLT_C', 'FNL-MMA_B', 'jip_B', 'pips_D', 'mana_C', 'tap_C']
-p_sizes = [32.0, 30.3699951, 30.583984, 30.4755859, 31.953125, 31.48828, 31.0358887]
+prefetchers = ['Barca_A', 'D-JOLT_10J', 'ISCA_Entangling_2Ke_NoShadows', 'FNL-MMA_12E', 'JIP_10E', 'PIPS_10F', 'TAP_10E', 'mana_10F']
+# TODO - make it so we can add up the total size of the combination easily
+#p_sizes = [32.0, 30.3699951, 30.583984, 30.4755859, 31.953125, 31.48828, 31.0358887]
 
 # Change these to where your prefetchers and hybrid prefetchers are
 home = os.getcwd()
@@ -14,7 +15,7 @@ hybrids_dir = '/infrastructure/complete_hybrids/'
 prefs_dir =  '/infrastructure/prefetchers/'
 json_config_file = '/infrastructure/json_config_file/ipc_base.json'
 
-# First, get the hybrid prefethers' file names 
+# First, get the hybrid prefetchers' file names 
 # from 'complete_hybrids' directory
 # Parse the file names so that we know what to 
 # use to name each resulting file
