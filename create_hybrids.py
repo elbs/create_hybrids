@@ -5,7 +5,7 @@ import itertools as it
 import re
 
 # These two lists are the only things you must add to, or modify
-prefetchers = ['Barca_A', 'D-JOLT_10J', 'ISCA_Entangling_2Ke_NoShadows', 'FNL-MMA_12E', 'JIP_10E', 'PIPS_10F', 'TAP_10E', 'mana_10F']
+prefetchers = ['Barca_A', 'D-JOLT_10J', 'FNL-MMA_12E', 'JIP_10E', 'PIPS_10F', 'TAP_10E', 'mana_10F']
 # TODO - make it so we can add up the total size of the combination easily
 #p_sizes = [32.0, 30.3699951, 30.583984, 30.4755859, 31.953125, 31.48828, 31.0358887]
 
@@ -44,8 +44,9 @@ for h in hybrid_prefetchers:
   print('Hybrid Base Name: ' + hybrid_base)
   
   # Find the integer number in the hybrid base's name
-  # tells us how many prefetchers we need to fetch
-  combination_amt = int(re.findall(r'\d+', hybrid_base)[0])
+  # tells us how many prefetchers we need to fetch, 
+  # minus one because EIP is eternal <3
+  combination_amt = int(re.findall(r'\d+', hybrid_base)[0]) - 1
   
   # Debug
   print('Combination Count: ' + str(combination_amt))
@@ -79,6 +80,9 @@ for h in hybrid_prefetchers:
     
     # Copy over ppf.cc, which all need
     shutil.copy2(home + prefs_dir + 'ppf.cc', home + '/' + comb_dir_name)
+    
+    # Copy over guaranteed EIP, which all combinations need
+    shutil.copy2(home + prefs_dir + 'ISCA_Entangling_2Ke_NoShadows.inc', home + '/' + comb_dir_name)
 
     # And finally move over prefetch_buffer.cc, which all need
     shutil.copy2(home + prefs_dir + 'prefetch_buffer.cc', home + '/' + comb_dir_name)
