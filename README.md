@@ -3,7 +3,7 @@ Infrastructure to create composite prefetchers
 
 Basically all you need to do is 
 
-<module load python3 for terra>, 
+module load python3 for terra 
 
 and then 
 
