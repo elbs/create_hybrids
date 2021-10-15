@@ -2,11 +2,12 @@
 Infrastructure to create composite prefetchers
 
 Basically all you need to do is 
-$<module load python3 for terra>, 
+
+<module load python3 for terra>, 
 
 and then 
 
-$python3 create_hybrids.py
+python3 create_hybrids.py
 
 It's super well commented so you can get a good idea. Add prefetchers and supporting .cc files (e.g. ppf.cc etc.) into 
 ./infrastructure/prefetchers and then add the prefetcher name to that first list of create_hybrids.py 
