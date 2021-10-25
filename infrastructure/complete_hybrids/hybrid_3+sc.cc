@@ -15,7 +15,8 @@
 //Must be enabled to allow PPF to use these statistics
 #define MEASURE                                                      
 //Enables PPF                                                  
-#define PPF_ENABLED 1
+// Elba: October 24, disable ppf here 
+#define PPF_ENABLED 0
 //Decides to prefetch based on the positive outcome of any ppf belonging to a merged request
 #define PPF_MERGE 0 
 //Allows PPF to prefetch directly to the L1, L2, or reject a prefetch completely
@@ -463,7 +464,8 @@ void O3_CPU::l1i_prefetcher_cycle_operate()
   // The generate_prefetches() function dictates how many addresses 
   // to prefetch!
   int num_to_fetch = L1I.get_size(3, 0) - L1I.get_occupancy(3, 0);
-  deque<PF_BUFFER_ENTRY> cycle_prefetches = pfb.generate_prefetches(num_to_fetch, &sc);
+  // Elba: October 24, delete sc here
+  deque<PF_BUFFER_ENTRY> cycle_prefetches = pfb.generate_prefetches(num_to_fetch, NULL);
 
   bool allow = true;
 

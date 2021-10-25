@@ -5,7 +5,8 @@ import itertools as it
 import re
 
 # These two lists are the only things you must add to, or modify
-prefetchers = ['Barca_A', 'D-JOLT_10J', 'FNL-MMA_12E', 'JIP_10E', 'PIPS_10F', 'TAP_10E', 'mana_10F']
+# TODO - JIP isn't playing nicely currently. 
+prefetchers = ['Barca_10C', 'D-JOLT_10J', 'FNL-MMA_12E', 'PIPS_10F', 'TAP_10E', 'mana_10F', 'JIP_13N']
 # TODO - make it so we can add up the total size of the combination easily
 #p_sizes = [32.0, 30.3699951, 30.583984, 30.4755859, 31.953125, 31.48828, 31.0358887]
 
