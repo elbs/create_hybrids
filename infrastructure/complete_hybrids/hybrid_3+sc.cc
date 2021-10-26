@@ -81,7 +81,7 @@ using namespace std;
 #define l1i_prefetcher_initialize l1i_prefetcher_initialize3
 #define prefetch_code_line prefetch_code_line3
 
-#include "ISCA_Entangling_2Ke_NoShadows.inc"
+#include "ISCA_Entangling_1Ke_NoShadows.inc"
 
 #undef l1i_prefetcher_branch_operate
 #undef l1i_prefetcher_cache_fill
