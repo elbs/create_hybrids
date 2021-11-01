@@ -1,6 +1,7 @@
 #include "ooo_cpu.h"
 #include "prefetch_buffer.h"
 #include "shadow_cache.h"
+#include "set_sampler.h"
 #include "ppf.h"
 #include <iostream>
 #include <list>
@@ -14,8 +15,14 @@
 //Turns on multiple shadow caches for the purpose of measuring prefetchers' overlapping behavior
 //Must be enabled to allow PPF to use these statistics
 #define MEASURE                                                      
+
+//######### FILTERING MECHANISMS #########
+
+//Enable/disable shadow cache during prefetch generation
+#define PFB_SHADOWCACHE_ENABLED 0
+
+//PPF SETTINGS
 //Enables PPF                                                  
-// Elba: October 24, disable ppf here 
 #define PPF_ENABLED 0
 //Decides to prefetch based on the positive outcome of any ppf belonging to a merged request
 #define PPF_MERGE 0 
@@ -26,10 +33,25 @@
 #define B_HIST_LENGTH 32
 #define B_TAKEN_LENGTH 32
 
+//##### END FILTERING MECHANISMS #########
+
 //Turns on feedback metrics for PFB
 //#define PFB_METRICS
 
 using namespace std;
+
+
+// PREFETCH BUFFERS
+
+// Three prefetchers + shadow cache
+const uint32_t num_prefetchers = 3;
+
+// An array of three lists, one for each prefetcher
+list<uint64_t> my_prefetch_queue[num_prefetchers];
+list<long> my_prefetch_queue_source_ent[num_prefetchers];
+
+PREFETCH_BUFFER pfb(num_prefetchers);
+
 
 // First Prefetcher: \#defines help create individually named 
 // functions for each prefetcher
@@ -40,6 +62,7 @@ using namespace std;
 #define l1i_prefetcher_final_stats l1i_prefetcher_final_stats1
 #define l1i_prefetcher_initialize l1i_prefetcher_initialize1
 #define prefetch_code_line prefetch_code_line1
+#define l1i_prefetcher_id 0
 
 #include XXX 
 
@@ -50,6 +73,7 @@ using namespace std;
 #undef l1i_prefetcher_final_stats
 #undef l1i_prefetcher_initialize
 #undef prefetch_code_line
+#undef l1i_prefetcher_id
 
 // Second Prefetcher: \#defines help create individually named 
 // functions for each prefetcher
@@ -60,6 +84,7 @@ using namespace std;
 #define l1i_prefetcher_final_stats l1i_prefetcher_final_stats2
 #define l1i_prefetcher_initialize l1i_prefetcher_initialize2
 #define prefetch_code_line prefetch_code_line2
+#define l1i_prefetcher_id 1
 
 #include YYY 
 
@@ -70,6 +95,7 @@ using namespace std;
 #undef l1i_prefetcher_final_stats
 #undef l1i_prefetcher_initialize
 #undef prefetch_code_line
+#undef l1i_prefetcher_id
 
 // Third Prefetcher: \#defines help create individually named 
 // functions for each prefetcher
@@ -80,6 +106,7 @@ using namespace std;
 #define l1i_prefetcher_final_stats l1i_prefetcher_final_stats3
 #define l1i_prefetcher_initialize l1i_prefetcher_initialize3
 #define prefetch_code_line prefetch_code_line3
+#define l1i_prefetcher_id 2
 
 #include "ISCA_Entangling_1Ke_NoShadows.inc"
 
@@ -90,15 +117,7 @@ using namespace std;
 #undef l1i_prefetcher_final_stats
 #undef l1i_prefetcher_initialize
 #undef prefetch_code_line
-
-// Three prefetchers + shadow cache
-const uint32_t num_prefetchers = 3;
-
-// An array of three lists, one for each prefetcher
-list<uint64_t> my_prefetch_queue[num_prefetchers];
-list<long> my_prefetch_queue_source_ent[num_prefetchers];
-
-PREFETCH_BUFFER pfb(num_prefetchers);
+#undef l1i_prefetcher_id
 
 PPF ppf1;
 PPF ppf2;
@@ -112,13 +131,13 @@ uint64_t last_pf = 0;
 
 // Elba: Made the shadow cache a class
 SHADOW_CACHE sc;
-SHADOW_CACHE base_sc;
+SAMPLER base_sc;
 
 #ifdef MEASURE
 
-SHADOW_CACHE first_sc;
-SHADOW_CACHE second_sc;
-SHADOW_CACHE third_sc;
+SAMPLER sampler1;
+SAMPLER sampler2;
+SAMPLER sampler3;
 
 //number of possible hit scenarios between
 //the 4 shadow caches
@@ -131,11 +150,12 @@ const int NUM_MEASURE = 4;
 //Bit vectors are from 0:X meaning 
 //leftmost is 0 but appears as 8
 
-//FNL is  1000
-//DJOLT   0100
-//BARCA   0010
+//PF1 is  1000
+//PF2     0100
+//PF3     0010
 //BASE    0001
-int scenarios[HIT_STATES] = {0,8,4,2,1,12,10,9,6,5,3,14,13,11,7,15};
+uint64_t scenarios[HIT_STATES] = {0, 8, 4, 2, 1, 12, 10, 9, 6, 5, 3, 14, 13, 11, 7, 15};
+int total_measured = 0;
 uint64_t hit_stats[HIT_STATES];
 
 //const int EPOCH_SIZE = 100000;
@@ -336,47 +356,33 @@ void O3_CPU::l1i_prefetcher_cache_operate(uint64_t v_addr, uint8_t cache_hit, ui
   // make this demand access to the shadow cache
   sc.access_cache (v_addr, &sc_hit, &pf_hit, 0, NULL, NULL, ACCESS_DEMAND);
 
-  #ifdef PFB_METRICS
-  pfb.update_pf_hits(v_addr, sc_hit, pf_hit);
-
-  if(!cache_hit)
-    pfb.update_harmful(v_addr, first_sc, second_sc, third_sc, base_sc);
-  pfb.update_accuracy(v_addr, pf_hit);
-  pfb.inc_epoch(); 
-  #endif
-
-
 #ifdef MEASURE
 
-  bool first_hit = false;
-  bool second_hit = false;
-  bool third_hit = false;
+  bool sampler1_hit = false;
+  bool sampler2_hit = false;
+  bool sampler3_hit = false;
   bool base_hit = false;
 
-  //First prefetcher
-  first_sc.access_cache(v_addr, &first_hit, NULL, 0, NULL, NULL, ACCESS_DEMAND);
+  sampler1_hit = (sampler1.get_way(v_addr) != -1);
+  sampler2_hit = (sampler2.get_way(v_addr) != -1);
+  sampler3_hit = (sampler3.get_way(v_addr) != -1);
 
-  //Second prefetcher
-  second_sc.access_cache(v_addr, &second_hit, NULL, 0, NULL, NULL, ACCESS_DEMAND);
+  base_hit = (base_sc.get_way(v_addr) != -1);
 
-  //Third prefetcher
-  third_sc.access_cache(v_addr, &third_hit, NULL, 0, NULL, NULL, ACCESS_DEMAND);
-
-  base_sc.access_cache(v_addr, &base_hit, NULL, 0, NULL, NULL, ACCESS_DEMAND);
-
-  bool hit_vector[NUM_MEASURE] = {first_hit, second_hit, third_hit, base_hit};
+  bool hit_vector[NUM_MEASURE] = {sampler1_hit, sampler2_hit, sampler3_hit, base_hit};
   int bit_hit = 0;
 
   for(int a = 0; a < NUM_MEASURE; a++){
     bit_hit |= (hit_vector[a] & 1) << ((NUM_MEASURE - 1) - a);
   }
-
-  hit_stats[bit_hit] += 1;
-
   
-#endif
-#ifndef MEASURE
-  base_sc.access_cache(v_addr, NULL, NULL, 0, NULL, NULL, ACCESS_DEMAND);
+  hit_stats[bit_hit]++;
+  total_measured++; 
+  assert(bit_hit < HIT_STATES); 
+  base_sc.update_sampler(v_addr, 0);
+  sampler1.update_sampler(v_addr, 0);
+  sampler2.update_sampler(v_addr, 0);
+  sampler3.update_sampler(v_addr, 0);
 #endif
   // !!! end shadow cache code !!!
 
@@ -440,15 +446,15 @@ void O3_CPU::l1i_prefetcher_cycle_operate()
       switch(i){
         //FNL
         case 0:
-          first_sc.access_cache(p_vaddr, NULL, NULL, 0, NULL, NULL, ACCESS_PREFETCH);
+          sampler1.update_sampler(p_vaddr, 1);
           break;
         //DJOLT
         case 1:
-          second_sc.access_cache(p_vaddr, NULL, NULL, 0, NULL, NULL, ACCESS_PREFETCH);
+          sampler2.update_sampler(p_vaddr, 1);
           break;
         //BARCA 
         case 2:
-          third_sc.access_cache(p_vaddr, NULL, NULL, 0, NULL, NULL, ACCESS_PREFETCH);
+          sampler3.update_sampler(p_vaddr, 1);
           break;
       }
       #endif
@@ -464,9 +470,16 @@ void O3_CPU::l1i_prefetcher_cycle_operate()
   // The generate_prefetches() function dictates how many addresses 
   // to prefetch!
   int num_to_fetch = L1I.get_size(3, 0) - L1I.get_occupancy(3, 0);
-  // Elba: October 24, delete sc here
-  deque<PF_BUFFER_ENTRY> cycle_prefetches = pfb.generate_prefetches(num_to_fetch, NULL);
+  deque<PF_BUFFER_ENTRY> cycle_prefetches;
 
+  //If the shadow cache is enabled to filter redundant prefetches,
+  //pass it to the generate_prefetches function to. 
+  //Otherwise pass NULL which is handled in prefetch_buffer.cc
+  if(PFB_SHADOWCACHE_ENABLED)
+    cycle_prefetches = pfb.generate_prefetches(num_to_fetch, &sc);
+  else
+    cycle_prefetches = pfb.generate_prefetches(num_to_fetch, NULL);
+    
   bool allow = true;
 
   // Finally, for each of the prefetches generated, call 
@@ -658,12 +671,15 @@ void O3_CPU::l1i_prefetcher_final_stats()
   //  printf("%d %.3f\n", a, avg_entries_3[a]);
   //}
   //printf("\n");
-
   printf("Number of hit pre scenario\n");
-  for(uint32_t a = 0; a < HIT_STATES; a++)
-    printf("%ld ", hit_stats[scenarios[a]]);
+  int t_total = 0;
+  for(int a = 0; a < HIT_STATES; a++){
+    t_total += hit_stats[scenarios[a]];
+    printf("%lu ", hit_stats[scenarios[a]]);
+  }
+  assert(t_total == total_measured);
   printf("\n");
-
+  printf("Total Measured: %d\n", total_measured);
 #endif
 
   printf("PPF1 Accept %d PPF1 Reject %d\n", 
