@@ -233,7 +233,7 @@ void l1i_print_stats_table() {
 // HISTORY TABLE (BUFFER)
 
 #define L1I_HIST_TABLE_MASK (L1I_HIST_TABLE_ENTRIES - 1)
-#define L1I_BB_MERGE_ENTRIES 14
+#define L1I_BB_MERGE_ENTRIES 6
 #define L1I_HIST_TAG_BITS 58
 #define L1I_HIST_TAG_MASK (((uint64_t)1 << L1I_HIST_TAG_BITS) - 1)
 
@@ -358,9 +358,9 @@ uint64_t l1i_compress_format_entangled(uint64_t entangled_addr, uint32_t format)
   return entangled_addr & (((uint64_t)1 << L1I_ENTANGLED_FORMATS[format-1]) - 1);
 }
 
-#define L1I_ENTANGLED_TABLE_INDEX_BITS 6
+#define L1I_ENTANGLED_TABLE_INDEX_BITS 8
 #define L1I_ENTANGLED_TABLE_SETS (1 << L1I_ENTANGLED_TABLE_INDEX_BITS)
-#define L1I_ENTANGLED_TABLE_WAYS 16
+#define L1I_ENTANGLED_TABLE_WAYS 12
 #define L1I_MAX_ENTANGLED_PER_LINE L1I_ENTANGLED_NUM_FORMATS
 #define L1I_TAG_BITS (18 - L1I_ENTANGLED_TABLE_INDEX_BITS)
 #define L1I_TAG_MASK (((uint64_t)1 << L1I_TAG_BITS) - 1)

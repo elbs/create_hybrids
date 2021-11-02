@@ -15,6 +15,7 @@
 
 extern uint64_t current_core_cycle[NUM_CPUS];
 extern uint8_t  all_warmup_complete;
+extern std::vector<O3_CPU> ooo_cpu;
 
 // To access cpu in my functions
 uint32_t l1i_cpu_id;
@@ -663,7 +664,7 @@ void O3_CPU::l1i_prefetcher_cache_operate(uint64_t v_addr, uint8_t cache_hit, ui
   if (bb_size) l1i_stats_basic_blocks[bb_size]++;
   for (uint32_t i = 1; i <= bb_size; i++) {
     uint64_t pf_addr = v_addr + i * (1<<LOG2_BLOCK_SIZE);
-    if (!L1I.ongoing_request(pf_addr >> LOG2_BLOCK_SIZE)) {
+    if (!L1I.ongoing_request_vaddr(pf_addr)) {
       prefetch_code_line(pf_addr, (long)-1);
     }
   }
@@ -679,7 +680,7 @@ void O3_CPU::l1i_prefetcher_cache_operate(uint64_t v_addr, uint8_t cache_hit, ui
       if (bb_size) l1i_stats_basic_blocks_ent[bb_size]++;
       for (uint32_t i = 0; i <= bb_size; i++) {
 	uint64_t pf_line_addr = entangled_line_addr + i;
-	if (!L1I.ongoing_request(pf_line_addr)) {
+	if (!L1I.ongoing_request_vaddr(pf_line_addr << LOG2_BLOCK_SIZE)) {
 	  prefetch_code_line(pf_line_addr << LOG2_BLOCK_SIZE, (i == 0) ? source_ent : (long)-1);
 	}
       }

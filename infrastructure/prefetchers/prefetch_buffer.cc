@@ -807,3 +807,23 @@ void PREFETCH_BUFFER::inc_epoch(){
 //
 //}
 
+
+bool PREFETCH_BUFFER::ongoing_request_vaddr_different_ent(uint64_t v_addr, int puid, long source_ent) {
+  for(int j = 0; j < pf_buffer[puid].size(); j++) {
+    PF_BUFFER_ENTRY p = pf_buffer[puid].at(j);
+    if (p.pf_addr == v_addr && p.source_ent != source_ent) return true;
+  }
+  return false;
+}
+
+bool PREFETCH_BUFFER::ongoing_request_vaddr_different_puid(uint64_t v_addr, int puid) {
+  for(uint32_t i = 0; i < num_subprefs; i++) {
+    if (i != puid) {
+      for(int j = 0; j < pf_buffer[i].size(); j++) {
+	PF_BUFFER_ENTRY p = pf_buffer[i].at(j);
+	if (p.pf_addr == v_addr) return true;
+      }
+    }
+  }
+  return false;
+}
