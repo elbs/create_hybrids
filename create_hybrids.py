@@ -82,6 +82,9 @@ for h in hybrid_prefetchers:
     # Copy over ppf.cc, which all need
     shutil.copy2(home + prefs_dir + 'ppf.cc', home + '/' + comb_dir_name)
     
+    # Copy over ppf.cc, which all need
+    shutil.copy2(home + prefs_dir + 'set_sampler.cc', home + '/' + comb_dir_name)
+    
     # Copy over a guaranteed EIP file, which all combinations need
     shutil.copy2(home + prefs_dir + 'ISCA_Entangling_1Ke_NoShadows.inc', home + '/' + comb_dir_name)
 

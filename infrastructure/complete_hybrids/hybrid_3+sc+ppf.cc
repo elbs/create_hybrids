@@ -609,8 +609,8 @@ void O3_CPU::l1i_prefetcher_cycle_operate()
 // ----------------------------------------------------------------------------
 void O3_CPU::l1i_prefetcher_cache_fill(uint64_t v_addr, uint32_t set, uint32_t way, uint8_t prefetch, uint64_t evicted_v_addr, PACKET &filling_entry, BLOCK &evicting_entry)
 {
-  l1i_prefetcher_cache_fill1(v_addr, set, way, prefetch, evicted_v_addr);
-  l1i_prefetcher_cache_fill2(v_addr, set, way, prefetch, evicted_v_addr);
+  l1i_prefetcher_cache_fill1(v_addr, set, way, prefetch, evicted_v_addr, filling_entry, evicting_entry);
+  l1i_prefetcher_cache_fill2(v_addr, set, way, prefetch, evicted_v_addr, filling_entry, evicting_entry);
   l1i_prefetcher_cache_fill3(v_addr, set, way, prefetch, evicted_v_addr, filling_entry, evicting_entry);
   
   // !!! shadow cache code !!!

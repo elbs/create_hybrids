@@ -1554,7 +1554,7 @@ void O3_CPU::l1i_prefetcher_cycle_operate()
 }
 
 // MANA does not use this interface
-void O3_CPU::l1i_prefetcher_cache_fill(uint64_t v_addr, uint32_t set, uint32_t way, uint8_t prefetch, uint64_t evicted_v_addr) {
+void O3_CPU::l1i_prefetcher_cache_fill(uint64_t v_addr, uint32_t set, uint32_t way, uint8_t prefetch, uint64_t evicted_v_addr, PACKET &filling_entry, BLOCK &evicting_entry) {
 }
 
 

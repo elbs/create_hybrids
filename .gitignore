@@ -1,3 +1,3 @@
-hybrid_3+sc_*_l1i/
-hybrid_3+sc_*.json
+hybrid_3+sc+ppf_[0-9]*_l1i/
+*.json
 extras/
